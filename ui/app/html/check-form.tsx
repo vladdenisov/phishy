@@ -17,14 +17,18 @@ export const HtmlCheckForm = () => {
 
   const [data, setData] = useState<CheckHtmlResponse | null>(null);
 
-  const { mutate, isPending } = useCheckHtmlMutation({
+  const { mutate, isPending, error } = useCheckHtmlMutation({
     onSuccess: (data) => {
       console.log(data);
       setData(data);
     },
   });
 
-  const { mutate: mutateUrl, isPending: isPendingUrl } = useCheckUrlMutation({
+  const {
+    mutate: mutateUrl,
+    isPending: isPendingUrl,
+    error: errorUrl,
+  } = useCheckUrlMutation({
     onSuccess: (data) => {
       console.log(data);
       setData(data);
@@ -42,6 +46,8 @@ export const HtmlCheckForm = () => {
       mutateUrl(url);
     }
   };
+
+  console.log(error, errorUrl);
 
   return (
     <div className="flex flex-col gap-4 mt-4">
@@ -73,7 +79,20 @@ export const HtmlCheckForm = () => {
         </Button>
       </div>
 
-      {data && (
+      {error && (
+        <p className="text-danger">
+          {error.message}:{" "}
+          {JSON.stringify((error?.response?.data as any).detail)}
+        </p>
+      )}
+      {errorUrl && (
+        <p className="text-danger">
+          {errorUrl.message}:{" "}
+          {JSON.stringify((errorUrl?.response?.data as any).detail)}
+        </p>
+      )}
+
+      {data && !error && !errorUrl && (
         <Card className="mt-4">
           <CardHeader className="flex gap-3">
             <div className="flex flex-col gap-1">
@@ -116,16 +135,15 @@ export const HtmlCheckForm = () => {
                         </Chip>
                         <div className="flex flex-row gap-2 w-1/2 ml-auto mr-0">
                           <span className="text-small text-default-500 whitespace-nowrap">
-                            Значение: {value}
+                            Значение: {value.toFixed(2)}
                           </span>
                           <Progress
                             aria-label="Важность"
                             className="w-1/2 mr-0 ml-auto"
-                            color={importance > 0 ? "success" : "danger"}
                             maxValue={Math.max(
                               ...data.feature_importance.map((el) => el[2]),
                             )}
-                            value={Math.abs(importance)}
+                            value={Number(Math.abs(importance).toFixed(4))}
                           />
                         </div>
                       </div>
