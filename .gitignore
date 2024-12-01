@@ -1,8 +1,9 @@
-models/
 catboost_info/
 bert_*
 prepared_dataset.pkl
 text.tex
+
+
 
 tmp.js
 *.json
