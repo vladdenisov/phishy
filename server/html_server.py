@@ -49,12 +49,13 @@ import numpy as np
 from typing import Tuple
 import re
 from sklearn.feature_extraction.text import TfidfVectorizer
+import joblib
 
 class MailModelPredictor:
     def __init__(self, model_url, vec_url):
         self.model = keras.models.load_model(model_url)
         with open(vec_url, 'rb') as file:
-            self.vectorizer = pickle.load(file)
+            self.vectorizer = joblib.load(vec_url)
 
 
     def preprocess_text(self, text): 
@@ -64,7 +65,7 @@ class MailModelPredictor:
         return text
     
     def process(self, mail: str) -> Tuple[bool, float]:
-        x = self.vectorizer.transform([mail]).toarray()
+        x = self.vectorizer.transform([self.preprocess_text(mail)]).toarray()
         prediction = self.model.predict(x)
         return prediction < 0.5, prediction
 
@@ -1327,9 +1328,9 @@ def start_api(model_path: str, host: str = "0.0.0.0", port: int = 8000):
     global mail_predictor
     mail_predictor = MailModelPredictor(
         './models/mail/email_weights.keras',
-        './models/mail/tfidf_vectorizer.pkl')
+        './models/mail/vectorizer.joblib')
     global url_predictor 
-    url_predictor = UrlModelPredictor('./models/url/lstm_1.keras')
+    url_predictor = UrlModelPredictor('./models/url/only_lstm_model_4.keras')
     uvicorn.run(app, host=host, port=port)
 
 if __name__ == "__main__":
