@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 import { UseCustomMutationOptions } from "./helpers";
 import { axiosInstance } from "./axios";
@@ -48,7 +49,7 @@ export interface CheckHtmlResponse {
 }
 
 export const useCheckHtmlMutation = (
-  options: UseCustomMutationOptions<CheckHtmlResponse, Error, string>,
+  options: UseCustomMutationOptions<CheckHtmlResponse, AxiosError, string>,
 ) => {
   return useMutation({
     ...options,
