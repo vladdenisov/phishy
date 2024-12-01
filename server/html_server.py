@@ -42,6 +42,60 @@ import shap
 from urllib.parse import urlparse
 import hashlib
 import json
+from tensorflow import keras
+from keras.preprocessing.sequence import pad_sequences
+import string
+import numpy as np
+from typing import Tuple
+import re
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+class MailModelPredictor:
+    def __init__(self, model_url, vec_url):
+        self.model = keras.models.load_model(model_url)
+        with open(vec_url, 'rb') as file:
+            self.vectorizer = pickle.load(file)
+
+
+    def preprocess_text(self, text): 
+        text = re.sub(r'[^\w\s]', '', text) # удаление пунктуации
+        text = text.lower()
+        text = re.sub(r'\s+', ' ', text).strip() # удаление лишних пробелов
+        return text
+    
+    def process(self, mail: str) -> Tuple[bool, float]:
+        x = self.vectorizer.transform([mail]).toarray()
+        prediction = self.model.predict(x)
+        return prediction < 0.5, prediction
+
+
+class UrlModelPredictor:
+    def __init__(self, file_url: str):
+        lc_letters = string.ascii_lowercase
+        uc_letters = string.ascii_uppercase
+        digits = string.digits
+        symbols = '$-_.+!*()\';/?:@=&%#~[]^\\|{}<>,'
+        self.alphabet = lc_letters + uc_letters + digits + symbols
+        self.model = keras.models.load_model(file_url)
+        self.char_to_index = {char: idx+1 for idx, char in enumerate(self.alphabet)}
+    
+    def encode_char(self, char):
+        res = self.char_to_index.get(char)
+        if res is None:
+            return len(self.char_to_index) + 1
+        return res
+
+    def encode(self, str):
+        res = [self.encode_char(char) for char in str]
+        return np.array(res)
+
+    def process(self, url: str) -> Tuple[bool, float]:
+        encoded = self.encode(url)
+        padded = pad_sequences([encoded], maxlen=100, padding='post', truncating='post')
+        result = self.model.predict(np.array([padded]))
+        return result < 0.5, result
+
+
 
 class HTMLPhishingDetector:
     def __init__(
@@ -1114,7 +1168,7 @@ def load_model_for_api(model_path: str):
     except Exception as e:
         raise RuntimeError(f"Failed to load model: {str(e)}")
 
-@app.post("/predict", response_model=PredictionResponse)
+@app.post("/html/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest) -> Dict[str, Any]:
     """Predict whether HTML content is from a phishing page."""
     if phishing_detector is None:
@@ -1179,7 +1233,7 @@ async def fetch_page_content(url: str, wait_for_load: int = 5000, disable_javasc
         logging.error(f"Error fetching page content: {str(e)}")
         raise RuntimeError(f"Failed to fetch page content: {str(e)}")
 
-@app.post("/predict_url", response_model=PredictionResponse)
+@app.post("/html/predict_url", response_model=PredictionResponse)
 async def predict_url(request: URLPredictionRequest) -> Dict[str, Any]:
     """
     Fetch URL content and predict whether it's a phishing page.
@@ -1229,9 +1283,53 @@ async def health_check():
         "model_loaded": phishing_detector is not None
     }
 
+url_predictor: UrlModelPredictor
+
+class URLModelResponse(BaseModel):
+    is_phishing: bool
+    level: float
+
+class URLModelRequest(BaseModel):
+    url: str
+
+@app.post("/url/predict", response_model=URLModelResponse)
+async def test_url(request: URLModelRequest):
+    result = url_predictor.process(request.url)
+    
+    response = {
+        "is_phishing": result[0][0][0],
+        "level": result[1][0][0]
+    }
+    return response
+
+mail_predictor: MailModelPredictor
+
+class MailModelResponse(BaseModel):
+    is_phishing: bool
+    level: float
+
+class MailModelRequest(BaseModel):
+    mail: str
+
+@app.post("/mail/predict", response_model=MailModelResponse)
+async def test_url(request: MailModelRequest):
+    result = mail_predictor.process(request.mail)
+    print(result)
+    response = {
+        "is_phishing": result[0][0],
+        "level": result[1][0]
+    }
+    return response
+
 def start_api(model_path: str, host: str = "0.0.0.0", port: int = 8000):
     """Start the FastAPI server with the model loaded."""
     load_model_for_api(model_path)
+    global mail_predictor
+    mail_predictor = MailModelPredictor(
+        './models/mail/email_weights.keras',
+        './models/mail/tfidf_vectorizer.pkl')
+    global url_predictor 
+    url_predictor = UrlModelPredictor('./models/url/lstm_1.keras')
     uvicorn.run(app, host=host, port=port)
 
 if __name__ == "__main__":
