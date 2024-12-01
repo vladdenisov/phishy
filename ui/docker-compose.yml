@@ -1,0 +1,12 @@
+services:
+  ui_proxy:
+    image: nginx:alpine
+    ports:
+      - 25565:9000
+    volumes:
+      - .nginx/dev.conf.template:/etc/nginx/templates/nginx.conf.template
+    environment:
+      UI_SERVER: http://host.docker.internal:3000
+      CORE_URL: http://host.docker.internal:8000
+    extra_hosts:
+      - host.docker.internal:host-gateway

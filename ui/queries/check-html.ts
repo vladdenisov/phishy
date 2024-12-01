@@ -55,7 +55,7 @@ export const useCheckHtmlMutation = (
     ...options,
     mutationKey: ["check-html"],
     mutationFn: async (html: string) => {
-      const response = await axiosInstance.post("/predict", {
+      const response = await axiosInstance.post("/api/html/predict", {
         html_content: html,
       });
 

@@ -93,26 +93,28 @@ export const HtmlCheckForm = () => {
       )}
 
       {data && !error && !errorUrl && (
-        <Card className="mt-4">
+        <Card className="mt-4 max-w-lg mx-auto">
           <CardHeader className="flex gap-3">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 w-full">
               <p className="text-lg ml-0 mr-auto">Результаты анализа</p>
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-wrap gap-2 items-center">
                 <Chip
                   color={data.is_phishing ? "danger" : "success"}
                   variant="flat"
                 >
                   {data.is_phishing ? "Фишинг" : "Безопасно"}
                 </Chip>
-                <Progress
-                  aria-label="Уверенность"
-                  className="w-36"
-                  color={data.is_phishing ? "danger" : "success"}
-                  value={data.confidence * 100}
-                />
-                <span className="text-small text-default-500">
-                  {(data.confidence * 100).toFixed(1)}%
-                </span>
+                <div className="flex gap-2 items-center flex-1 min-w-[200px]">
+                  <Progress
+                    aria-label="Уверенность"
+                    className="flex-1"
+                    color={data.is_phishing ? "danger" : "success"}
+                    value={data.confidence * 100}
+                  />
+                  <span className="text-small text-default-500 whitespace-nowrap">
+                    {(data.confidence * 100).toFixed(1)}%
+                  </span>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -129,17 +131,20 @@ export const HtmlCheckForm = () => {
                 <div className="flex flex-col gap-2">
                   {data.feature_importance.map(
                     ([feature, value, importance], index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Chip size="sm" variant="flat">
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row sm:items-center gap-2"
+                      >
+                        <Chip className="w-fit" size="sm" variant="flat">
                           {feature}
                         </Chip>
-                        <div className="flex flex-row gap-2 w-1/2 ml-auto mr-0">
+                        <div className="flex flex-row gap-2 w-full sm:w-1/2 sm:ml-auto sm:mr-0">
                           <span className="text-small text-default-500 whitespace-nowrap">
                             Значение: {value.toFixed(2)}
                           </span>
                           <Progress
                             aria-label="Важность"
-                            className="w-1/2 mr-0 ml-auto"
+                            className="flex-1"
                             maxValue={Math.max(
                               ...data.feature_importance.map((el) => el[2]),
                             )}
@@ -159,16 +164,18 @@ export const HtmlCheckForm = () => {
                     {data.suspicious_elements.map((element, index) => (
                       <Card key={index} className="border-none bg-default-50">
                         <CardBody className="py-3">
-                          <div className="flex gap-2 items-start">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <Chip
-                              className="whitespace-nowrap"
+                              className="w-fit"
                               color="warning"
                               variant="flat"
                             >
                               {element.type}
                             </Chip>
                             <div className="flex flex-col gap-1">
-                              <p className="font-medium">{element.element}</p>
+                              <p className="font-medium break-all">
+                                {element.element}
+                              </p>
                               <p className="text-small text-default-500">
                                 {element.issue}
                               </p>
