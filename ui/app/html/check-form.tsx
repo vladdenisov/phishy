@@ -93,7 +93,7 @@ export const HtmlCheckForm = () => {
       )}
 
       {data && !error && !errorUrl && (
-        <Card className="mt-4 max-w-lg mx-auto">
+        <Card className="mt-4 mx-auto max-w-[800px]">
           <CardHeader className="flex gap-3">
             <div className="flex flex-col gap-1 w-full">
               <p className="text-lg ml-0 mr-auto">Результаты анализа</p>

@@ -18,7 +18,7 @@ export const siteConfig = {
     },
     {
       label: "Письма",
-      href: "/email",
+      href: "/mail",
     },
   ],
   navMenuItems: [
@@ -36,7 +36,7 @@ export const siteConfig = {
     },
     {
       label: "Письма",
-      href: "/email",
+      href: "/mail",
     },
   ],
 };

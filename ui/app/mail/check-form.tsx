@@ -7,7 +7,6 @@ import { Chip } from "@nextui-org/chip";
 import { Progress } from "@nextui-org/progress";
 import { Divider } from "@nextui-org/divider";
 
-import { subtitle } from "@/components/primitives";
 import { useCheckMailMutation } from "@/queries/check-mail";
 
 export const UrlCheckForm = () => {
@@ -31,7 +30,6 @@ export const UrlCheckForm = () => {
   return (
     <div className="flex flex-col gap-4 mt-4">
       <div className="w-full flex flex-col gap-2 mt-4 max-w-lg m-auto">
-        <h3 className={subtitle()}>Проверка URL</h3>
         <Textarea
           placeholder="Введите текст письма"
           value={text}
@@ -67,7 +65,7 @@ export const UrlCheckForm = () => {
                   {data.is_phishing ? "Фишинг" : "Безопасно"}
                 </Chip>
                 <div className="flex flex-row gap-2 items-center">
-                  Уровень доверия к URL:
+                  Уровень доверия к письму:
                   <Progress
                     className="w-36"
                     color={data.is_phishing ? "danger" : "success"}
