@@ -89,8 +89,17 @@ class UrlModelPredictor:
     def encode(self, str):
         res = [self.encode_char(char) for char in str]
         return np.array(res)
+    
+    def clean_url(self, url):
+        # Remove 'http://', 'https://', and 'www.' from the start of the URL
+        cleaned_url = re.sub(r'^(https?://)', '', url)
+        cleaned_url = re.sub(r'^www\.', '', cleaned_url)
+        return cleaned_url
 
     def process(self, url: str) -> Tuple[bool, float]:
+        url = self.clean_url(url)
+        if url[-1] != '/':
+            url += '/'
         encoded = self.encode(url)
         padded = pad_sequences([encoded], maxlen=100, padding='post', truncating='post')
         result = self.model.predict(np.array([padded]))
@@ -1327,10 +1336,10 @@ def start_api(model_path: str, host: str = "0.0.0.0", port: int = 8000):
     load_model_for_api(model_path)
     global mail_predictor
     mail_predictor = MailModelPredictor(
-        './models/mail/email_weights.keras',
+        './models/mail/email_weights_1.keras',
         './models/mail/vectorizer.joblib')
     global url_predictor 
-    url_predictor = UrlModelPredictor('./models/url/only_lstm_model_4.keras')
+    url_predictor = UrlModelPredictor('./models/url/only_lstm_model_5.keras')
     uvicorn.run(app, host=host, port=port)
 
 if __name__ == "__main__":
